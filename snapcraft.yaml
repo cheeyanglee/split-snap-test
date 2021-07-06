@@ -1,0 +1,77 @@
+name: libva-test
+base: core20 
+version: '0.1' 
+summary: snap package including libdrm and libva 
+description: |
+  single snap package including libdrm and libva as library
+
+grade: devel # must be 'stable' to release into candidate/stable channels
+confinement: devmode # use 'strict' once you have the right plugs and slots
+architectures:
+  - build-on: amd64
+    run-on: amd64
+
+parts:
+  debs:
+    plugin: nil
+    build-packages:
+      - cmake
+      - meson
+      - pkg-config
+      - libpciaccess-dev
+      - xutils-dev
+      - valgrind
+      - xsltproc
+      - libx11-dev
+      - python3-docutils
+      - libwayland-dev 
+      - libxext-dev
+      - libxfixes-dev
+      - libset-scalar-perl
+      - perl
+      - libgl1-mesa-dri
+      - libgl1-mesa-dev
+      - libelf-dev
+      - libwayland-bin
+      - doxygen
+
+  libdrm:
+    after: [ debs ]
+    source: https://gitlab.freedesktop.org/mesa/drm/-/archive/libdrm-2.4.104/drm-libdrm-2.4.104.tar.gz 
+    plugin: meson
+    meson-parameters:
+      - --prefix=/usr
+    stage-packages:
+      - libx11-6
+      - libpciaccess0
+
+  libva:
+    after: [ libdrm ]
+    source: https://github.com/intel/libva/releases/download/2.10.0/libva-2.10.0.tar.bz2
+    plugin: meson
+    meson-parameters:
+      - --prefix=/usr
+    stage-packages:
+      - libgl1
+      - libglvnd0
+      - libglx0
+      - libwayland-client0
+      - libxext6
+      - libxfixes3
+      - intel-media-va-driver-non-free
+      - i965-va-driver
+      - mesa-va-drivers
+    stage:
+      - -usr/lib/x86_64-linux-gnu/libdrm.so.2.4.0
+      - -usr/lib/x86_64-linux-gnu/libdrm_amdgpu.so.1.0.0
+      - -usr/lib/x86_64-linux-gnu/libdrm_intel.so.1.0.0
+      - -usr/lib/x86_64-linux-gnu/libdrm_nouveau.so.2.0.0
+      - -usr/lib/x86_64-linux-gnu/libdrm_radeon.so.1.0.1
+      - -usr/share/libdrm/amdgpu.ids
+
+    organize: 
+        "snap/libva/current/usr/lib/x86_64-linux-gnu/*.so*": /usr/lib/x86_64-linux-gnu/
+        "snap/libva/current/usr/lib/x86_64-linux-gnu/dri/*.so*": /usr/lib/x86_64-linux-gnu/dri/
+        "snap/libva/current/usr/include/*.h": /usr/include/
+        "snap/libva/current/usr/share/libdrm/*.ids": usr/share/libdrm/
+
