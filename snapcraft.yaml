@@ -1,17 +1,23 @@
 name: libva-test
 base: core20 
-version: '0.1' 
+version: '0.2' 
 summary: snap package including libdrm and libva 
 description: |
   single snap package including libdrm and libva as library
 
-grade: stable # must be 'stable' to release into candidate/stable channels
+grade: devel # must be 'stable' to release into candidate/stable channels
 confinement: strict # use 'strict' once you have the right plugs and slots
 architectures:
   - build-on: amd64
     run-on: amd64
 
 parts:
+  buildenv:
+    plugin: nil
+    build-environment: &buildenv
+      - LD_LIBRARY_PATH: $SNAPCRAFT_STAGE/usr/lib:$SNAPCRAFT_STAGE/usr/lib/$SNAPCRAFT_ARCH_TRIPLET:$LD_LIBRARY_PATH
+      - PKG_CONFIG_PATH: $SNAPCRAFT_STAGE/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/pkgconfig:$SNAPCRAFT_STAGE/usr/lib/pkgconfig:$SNAPCRAFT_STAGE/usr/share/pkgconfig:$PKG_CONFIG_PATH
+
   debs:
     plugin: nil
     build-packages:
@@ -39,8 +45,10 @@ parts:
     after: [ debs ]
     source: https://gitlab.freedesktop.org/mesa/drm/-/archive/libdrm-2.4.104/drm-libdrm-2.4.104.tar.gz 
     plugin: meson
+    build-environment: *buildenv
     meson-parameters:
       - --prefix=/usr
+      - --buildtype=release
     stage-packages:
       - libx11-6
       - libpciaccess0
@@ -49,8 +57,10 @@ parts:
     after: [ libdrm ]
     source: https://github.com/intel/libva/releases/download/2.10.0/libva-2.10.0.tar.bz2
     plugin: meson
+    build-environment: *buildenv
     meson-parameters:
       - --prefix=/usr
+      - --buildtype=release
     stage-packages:
       - libgl1
       - libglvnd0
